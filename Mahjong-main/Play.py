@@ -1,6 +1,9 @@
 import pygame
 import random
 import sys
+from pygame.color import THECOLORS
+
+from Image import Image
 
 
 class Play:
@@ -11,37 +14,68 @@ class Play:
         self.HEIGHT = 800
         self.WEIGHT = 1200
         self.screen = pygame.display.set_mode((self.WEIGHT, self.HEIGHT))
-        self.image1 = pygame.image.load(r"img/kartinka1.png")
-        self.image2 = pygame.image.load(r"img/kartinka2.png")
-        self.image3 = pygame.image.load(r"img/kartinka3.png")
-        self.image4 = pygame.image.load(r"img/kartinka4.png")
-        self.o = [self.image1, self.image1, self.image2, self.image2, self.image3, self.image3, self.image4,
-                  self.image4]
+        self.images = []
+        self.fill_images()
+        self.select = False
+        self.select_image = None
+
+    def fill_images(self):
+
+        for i in range(1, 5):
+            self.images.append(Image(f"img//kartinka{i}.png", random.randint(1, 1100), random.randint(1, 750)))
+            self.images.append(Image(f"img//kartinka{i}.png", random.randint(1, 1100), random.randint(1, 750)))
 
     def close(self):
-        self.screen.blit(self.pole, self.pos)
-        self.position_and_draw_picture()
         while True:
+            self.draw()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                pygame.display.flip()
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    pos = pygame.mouse.get_pos()
+                    for image in self.images:
+                        if image.pos_x <= pos[0] <= image.pos_x + 50 and image.pos_y <= pos[1] <= image.pos_y + 100:
+                            if self.select:
+                                # print(image.image_name, self.select_image.image_name)
+                                if image.image_name == self.select_image.image_name:
+                                    # print(image.image_name, self.select_image.image_name)
+                                    self.select_image = None
+                                    self.select = False
+                                    image.select = False
+                                    image.hidden = True
+                                    for img in self.images:
+                                        if img.select:
+                                            img.select = False
+                                            img.hidden = True
+                                else:
+                                    self.select_image = None
+                                    self.select = False
 
-    def position_and_draw_picture(self):
-        pos = pygame.mouse.get_pos()
-        mouse_x, mouse_y = pos[0], pos[1]
-        pos_x = []
-        pos_y = []
-        for i in range(len(self.o)):
-            x = random.randint(0, 1100)
-            pos_x.append(x)
-            y = random.randint(0, 700)
-            pos_y.append(y)
-        for j in range(8):
-            self.screen.blit(self.o[j], (pos_x[j], pos_y[j]))
-        if pos[0]+50 <= pos_x[0] and pos[1]+100 <= pos_y[0]:
-            pass
+                            else:
+                                self.select_image = image
+                                self.select = True
+                                image.select = True
+                        if image.pos_x >= pos[0] >= image.pos_x+50 and image.pos_y >= pos[1] >= image.pos_y+100:
+                            if self.select:
+                                if image.image_name != self.select_image.image_name:
+                                    self.select_image = None
+                                    self.select = True
+                                    image.select = False
+                                    image.hidden = False
+                                    for img in self.images:
+                                        if img.select:
+                                            img.select = True
+                                            img.hidden = False
+                            else:
+                                self.select_image = image
+                                self.select = False
+                                image.select = False
 
-    def delete(self):
+
+    def draw(self):
+        self.screen.blit(self.pole, self.pos)
+        for image in self.images:
+            image.draw(self.screen)
+        pygame.display.flip()
 
